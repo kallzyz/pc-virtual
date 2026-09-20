@@ -8,21 +8,25 @@ jobs:
     timeout-minutes: 360
 
     steps:
-    - name: Habilitar Acesso RDP
+    - name: Definir Credenciais e Habilitar RDP
       run: |
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
         Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
         Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
-        echo "RDP Habilitado com sucesso!"
+        net user runneradmin Admin12345!
+        echo "Usuário: runneradmin"
+        echo "Senha: Admin12345!"
 
     - name: Baixar e Instalar Ngrok
       run: |
         Invoke-WebRequest -Uri "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
         Expand-Archive -Path "ngrok.zip" -DestinationPath "C:\ngrok" -Force
 
-    - name: Conectar ao Ngrok e Exibir Porta
+    - name: Iniciar Ngrok e Obter Link
       env:
         NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
       run: |
         C:\ngrok\ngrok.exe config add-authtoken $env:NGROK_AUTH_TOKEN
-        C:\ngrok\ngrok.exe tcp 3389
+        Start-Process -FilePath "C:\ngrok\ngrok.exe" -ArgumentList "tcp 3389"
+        Start-Sleep -Seconds 5
+        Invoke-WebRequest -Uri "http://localhost:4040/api/tunnels" | Select-Object -ExpandProperty Content
