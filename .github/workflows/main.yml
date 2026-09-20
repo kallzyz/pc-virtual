@@ -1,0 +1,30 @@
+name: Windows-RDP
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+    - name: Habilitar Acesso RDP
+      run: |
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -Name "fDenyTSConnections" -Value 0
+        Enable-NetFirewallRule -DisplayGroup "Remote Desktop"
+        Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server\WinStations\RDP-Tcp' -Name "UserAuthentication" -Value 1
+        echo "RDP Habilitado com sucesso!"
+
+    - name: Baixar e Instalar Ngrok
+      run: |
+        Invoke-WebRequest -Uri "https://bin.equinox.io/c/bNyj1mQVY4c/ngrok-v3-stable-windows-amd64.zip" -OutFile "ngrok.zip"
+        Expand-Archive -Path "ngrok.io" -DestinationPath "C:\ngrok" -Force
+        # Ou use o comando padrão do PowerShell para descompactar:
+        Expand-Archive -Path "ngrok.zip" -DestinationPath "C:\ngrok"
+
+    - name: Conectar ao Ngrok e Exibir Porta
+      env:
+        NGROK_AUTH_TOKEN: ${{ secrets.NGROK_AUTH_TOKEN }}
+      run: |
+        C:\ngrok\ngrok.exe config add-authtoken $env:NGROK_AUTH_TOKEN
+        C:\ngrok\ngrok.exe tcp 3389
