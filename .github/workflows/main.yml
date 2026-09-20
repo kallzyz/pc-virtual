@@ -30,3 +30,8 @@ jobs:
         Start-Process -FilePath "C:\ngrok\ngrok.exe" -ArgumentList "tcp 3389"
         Start-Sleep -Seconds 5
         Invoke-WebRequest -Uri "http://localhost:4040/api/tunnels" | Select-Object -ExpandProperty Content
+
+    - name: Manter Máquina Aberta
+      run: |
+        Write-Host "Máquina virtual pronta e rodando!"
+        while ($true) { Start-Sleep -Seconds 30 }
